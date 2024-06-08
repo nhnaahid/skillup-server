@@ -3,7 +3,7 @@ const app = express();
 const cors = require('cors');
 const jwt = require('jsonwebtoken');
 require('dotenv').config();
-const { MongoClient, ServerApiVersion } = require('mongodb');
+const { MongoClient, ServerApiVersion, ObjectId } = require('mongodb');
 
 const port = process.env.PORT || 5000;
 
@@ -42,6 +42,7 @@ async function run() {
         // await client.connect();
 
         const userCollection = client.db("skillupDB").collection("users");
+        const teacherRequestCollection = client.db("skillupDB").collection("teacherRequests");
 
         // jwt related api
         app.post('/jwt', async (req, res) => {
@@ -130,6 +131,32 @@ async function run() {
             const result = await userCollection.insertOne(user);
             res.send(result);
         });
+
+        // teacher request
+        app.get('/teacherRequests', verifyToken, verifyAdmin, async (req, res) => {
+            const result = await teacherRequestCollection.find().toArray();
+            res.send(result);
+        })
+        app.post('/teacherRequests', verifyToken, async (req, res) => {
+            const teacher = req.body;
+            const result = await teacherRequestCollection.insertOne(teacher);
+            // console.log(teacher);
+            res.send(result);
+        })
+        app.patch('/teacherRequests/:id', verifyToken, verifyAdmin, async (req, res) => {
+            const data = req.body;
+            // console.log(typeof data.status);
+            const id = req.params.id;
+            // console.log("id: ", id);
+            const filter = { _id: new ObjectId(id) }
+            const updatedDoc = {
+                $set: {
+                    status: data.status
+                }
+            }
+            const result = await teacherRequestCollection.updateOne(filter, updatedDoc)
+            res.send(result);
+        })
 
 
         // Send a ping to confirm a successful connection
