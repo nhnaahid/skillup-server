@@ -138,7 +138,7 @@ async function run() {
             res.send(result);
         });
 
-        app.patch('/users/:email', async (req, res) => {
+        app.patch('/users/:email', verifyToken, verifyAdmin, async (req, res) => {
             const data = req.body;
             // console.log(typeof data.role);
             const email = req.params.email;
@@ -155,6 +155,12 @@ async function run() {
         // teacher request
         app.get('/teacherRequests', verifyToken, verifyAdmin, async (req, res) => {
             const result = await teacherRequestCollection.find().toArray();
+            res.send(result);
+        })
+        app.get('/teacherRequests/:email', verifyToken, async (req, res) => {
+            const email = req.params.email;
+            const query = { email: email }
+            const result = await teacherRequestCollection.find(query).toArray();
             res.send(result);
         })
         app.post('/teacherRequests', verifyToken, async (req, res) => {
