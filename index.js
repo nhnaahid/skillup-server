@@ -138,6 +138,20 @@ async function run() {
             res.send(result);
         });
 
+        app.patch('/users/:email', async (req, res) => {
+            const data = req.body;
+            // console.log(typeof data.role);
+            const email = req.params.email;
+            const filter = { email: email }
+            const updatedDoc = {
+                $set: {
+                    role: data.role
+                }
+            }
+            const result = await userCollection.updateOne(filter, updatedDoc)
+            res.send(result);
+        })
+
         // teacher request
         app.get('/teacherRequests', verifyToken, verifyAdmin, async (req, res) => {
             const result = await teacherRequestCollection.find().toArray();
