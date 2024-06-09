@@ -43,6 +43,7 @@ async function run() {
 
         const userCollection = client.db("skillupDB").collection("users");
         const teacherRequestCollection = client.db("skillupDB").collection("teacherRequests");
+        const courseCollection = client.db("skillupDB").collection("courses");
 
         // jwt related api
         app.post('/jwt', async (req, res) => {
@@ -152,7 +153,7 @@ async function run() {
             res.send(result);
         })
 
-        // teacher request
+        // teacher related api
         app.get('/teacherRequests', verifyToken, verifyAdmin, async (req, res) => {
             const result = await teacherRequestCollection.find().toArray();
             res.send(result);
@@ -181,6 +182,31 @@ async function run() {
                 }
             }
             const result = await teacherRequestCollection.updateOne(filter, updatedDoc)
+            res.send(result);
+        })
+
+
+        // Course related api
+        app.get('/users/admin/courses', verifyToken, verifyAdmin, async (req, res) => {
+            const result = await courseCollection.find().toArray();
+            res.send(result);
+        })
+        app.get('/users/available-courses', async (req, res) => {
+            const data = req.body;
+            const query = { status: data.status }
+            const result = await courseCollection.find(query).toArray();
+            res.send(result);
+        })
+        app.get('/users/teacher/myCourses/:email', verifyToken, verifyTeacher, async (req, res) => {
+            const email = req.params.email;
+            const query = { email: email }
+            const result = await courseCollection.find(query).toArray();
+            res.send(result);
+        })
+        app.post('/courses', verifyToken, verifyTeacher, async (req, res) => {
+            const course = req.body;
+            const result = await courseCollection.insertOne(course);
+            // console.log(course);
             res.send(result);
         })
 
