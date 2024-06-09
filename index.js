@@ -187,13 +187,13 @@ async function run() {
 
 
         // Course related api
-        app.get('/users/admin/courses', verifyToken, verifyAdmin, async (req, res) => {
+        app.get('/courses', verifyToken, verifyAdmin, async (req, res) => {
             const result = await courseCollection.find().toArray();
             res.send(result);
         })
-        app.get('/users/available-courses', async (req, res) => {
-            const data = req.body;
-            const query = { status: data.status }
+        app.get('/courses/valid-courses', async (req, res) => {
+            // const data = req.body;
+            const query = { status: 'approved' }
             const result = await courseCollection.find(query).toArray();
             res.send(result);
         })
@@ -207,6 +207,20 @@ async function run() {
             const course = req.body;
             const result = await courseCollection.insertOne(course);
             // console.log(course);
+            res.send(result);
+        })
+        app.patch('/courses/:id', verifyToken, verifyAdmin, async (req, res) => {
+            const data = req.body;
+            // console.log(typeof data.status);
+            const id = req.params.id;
+            // console.log("id: ", id);
+            const filter = { _id: new ObjectId(id) }
+            const updatedDoc = {
+                $set: {
+                    status: data.status
+                }
+            }
+            const result = await courseCollection.updateOne(filter, updatedDoc)
             res.send(result);
         })
 
