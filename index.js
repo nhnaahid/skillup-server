@@ -4,6 +4,7 @@ const cors = require('cors');
 const jwt = require('jsonwebtoken');
 require('dotenv').config();
 const { MongoClient, ServerApiVersion, ObjectId } = require('mongodb');
+const stripe = require('stripe')(process.env.STRIPE_SECRET_KEY);
 
 const port = process.env.PORT || 5000;
 
@@ -44,6 +45,8 @@ async function run() {
         const userCollection = client.db("skillupDB").collection("users");
         const teacherRequestCollection = client.db("skillupDB").collection("teacherRequests");
         const courseCollection = client.db("skillupDB").collection("courses");
+        const paymentCollection = client.db("skillupDB").collection("payments");
+        const enrollCollection = client.db("skillupDB").collection("enrolls");
 
         // jwt related api
         app.post('/jwt', async (req, res) => {
@@ -229,6 +232,49 @@ async function run() {
             const result = await courseCollection.updateOne(filter, updatedDoc)
             res.send(result);
         })
+
+        // Enrolls related api
+        app.post('/enrolls', async (req, res) => {
+            const enrollInfo = req.body;
+            const result = await enrollCollection.insertOne(enrollInfo)
+            res.send(result);
+        })
+
+
+        // payment intent
+        app.post('/create-payment-intent', async (req, res) => {
+            const { price } = req.body;
+            const amount = parseInt(price * 100);
+            // console.log(amount, 'amount inside the intent');
+
+            const paymentIntent = await stripe.paymentIntents.create({
+                amount: amount,
+                currency: 'usd',
+                payment_method_types: ['card']
+            });
+
+            res.send({
+                clientSecret: paymentIntent.client_secret
+            })
+        });
+
+        // payment related api
+        app.post('/payments', verifyToken, async (req, res) => {
+            const payment = req.body;
+            const result = await paymentCollection.insertOne(payment);
+            res.send(result);
+        })
+
+        // stats
+        app.get('/stats', async (req, res) => {
+            const users = await userCollection.estimatedDocumentCount();
+            const enrolls = await enrollCollection.estimatedDocumentCount();
+            res.send({
+                users,
+                enrolls
+            })
+        })
+
 
 
         // Send a ping to confirm a successful connection
