@@ -234,6 +234,19 @@ async function run() {
         })
 
         // Enrolls related api
+        app.get('/enrolls/:id', async (req, res) => {
+            const id = req.params.id;
+            const query = { courseId: id };
+            const result = await enrollCollection.find(query).toArray();
+            console.log(result);
+            res.send(result);
+        })
+        app.get('/enrolls/:email', verifyToken, async (req, res) => {
+            const email = req.params.email;
+            const query = { studentEmail: email };
+            const result = await enrollCollection.find(query).toArray();
+            res.send(result);
+        })
         app.post('/enrolls', async (req, res) => {
             const enrollInfo = req.body;
             const result = await enrollCollection.insertOne(enrollInfo)
