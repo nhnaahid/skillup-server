@@ -195,6 +195,12 @@ async function run() {
             const result = await courseCollection.find().toArray();
             res.send(result);
         })
+        app.get('/courses/update/:id', verifyToken, verifyTeacher, async (req, res) => {
+            const id = req.params.id;
+            const query = { _id: new ObjectId(id) };
+            const result = await courseCollection.findOne(query);
+            res.send(result);
+        })
         app.get('/courses/valid-courses', async (req, res) => {
             // const data = req.body;
             const query = { status: 'approved' }
@@ -228,6 +234,25 @@ async function run() {
             const updatedDoc = {
                 $set: {
                     status: data.status
+                }
+            }
+            const result = await courseCollection.updateOne(filter, updatedDoc)
+            res.send(result);
+        })
+        app.patch('/courses/update/:id', verifyToken, verifyTeacher, async (req, res) => {
+            const data = req.body;
+            // console.log(typeof data.status);
+            const id = req.params.id;
+            // console.log("id: ", id);
+            const filter = { _id: new ObjectId(id) }
+            const updatedDoc = {
+                $set: {
+                    name: data.name,
+                    email: data.email,
+                    title: data.title,
+                    courseImage: data.courseImage,
+                    price: data.price,
+                    description: data.description,
                 }
             }
             const result = await courseCollection.updateOne(filter, updatedDoc)
