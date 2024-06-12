@@ -98,7 +98,8 @@ async function run() {
             const result = await userCollection.find().toArray();
             res.send(result);
         });
-        app.get('/users/:email', verifyToken, verifyAdmin, async (req, res) => {
+        // change korchi... verifyAdmin bad dichi
+        app.get('/users/:email', verifyToken, async (req, res) => {
             const email = req.params.email;
             const query = { email: email };
             const user = await userCollection.findOne(query);
@@ -234,14 +235,14 @@ async function run() {
         })
 
         // Enrolls related api
-        app.get('/enrolls/:id', async (req, res) => {
+        app.get('/enrolls/course/:id', async (req, res) => {
             const id = req.params.id;
             const query = { courseId: id };
             const result = await enrollCollection.find(query).toArray();
             console.log(result);
             res.send(result);
         })
-        app.get('/enrolls/:email', verifyToken, async (req, res) => {
+        app.get('/enrolls/student/:email', verifyToken, async (req, res) => {
             const email = req.params.email;
             const query = { studentEmail: email };
             const result = await enrollCollection.find(query).toArray();
