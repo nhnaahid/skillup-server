@@ -47,6 +47,7 @@ async function run() {
         const courseCollection = client.db("skillupDB").collection("courses");
         const paymentCollection = client.db("skillupDB").collection("payments");
         const enrollCollection = client.db("skillupDB").collection("enrolls");
+        const assignmentCollection = client.db("skillupDB").collection("assignments");
 
         // jwt related api
         app.post('/jwt', async (req, res) => {
@@ -259,12 +260,19 @@ async function run() {
             res.send(result);
         })
 
+        app.delete('/courses/:id', verifyToken, verifyTeacher, async (req, res) => {
+            const id = req.params.id;
+            const query = { _id: new ObjectId(id) };
+            const result = await courseCollection.deleteOne(query);
+            res.send(result);
+        })
+
         // Enrolls related api
         app.get('/enrolls/course/:id', async (req, res) => {
             const id = req.params.id;
             const query = { courseId: id };
             const result = await enrollCollection.find(query).toArray();
-            console.log(result);
+            // console.log(result);
             res.send(result);
         })
         app.get('/enrolls/student/:email', verifyToken, async (req, res) => {
@@ -278,6 +286,20 @@ async function run() {
             const result = await enrollCollection.insertOne(enrollInfo)
             res.send(result);
         })
+
+        // assignment related api
+        app.get('/assignments/:id', verifyToken, async (req, res) => {
+            const id = req.params.id;
+            const query = { courseId: id }
+            const result = await assignmentCollection.find(query).sort({ publishDate: -1 }).toArray()
+            res.send(result);
+        })
+        app.post('/assignments', verifyToken, verifyTeacher, async (req, res) => {
+            const assignmentInfo = req.body;
+            const result = await assignmentCollection.insertOne(assignmentInfo);
+            res.send(result);
+        })
+
 
 
         // payment intent
@@ -308,9 +330,11 @@ async function run() {
         app.get('/stats', async (req, res) => {
             const users = await userCollection.estimatedDocumentCount();
             const enrolls = await enrollCollection.estimatedDocumentCount();
+            const assignment = await assignmentCollection.estimatedDocumentCount();
             res.send({
                 users,
-                enrolls
+                enrolls,
+                assignment
             })
         })
 
