@@ -48,6 +48,7 @@ async function run() {
         const paymentCollection = client.db("skillupDB").collection("payments");
         const enrollCollection = client.db("skillupDB").collection("enrolls");
         const assignmentCollection = client.db("skillupDB").collection("assignments");
+        const feedbackCollection = client.db("skillupDB").collection("feedbacks");
 
         // jwt related api
         app.post('/jwt', async (req, res) => {
@@ -297,6 +298,29 @@ async function run() {
         app.post('/assignments', verifyToken, verifyTeacher, async (req, res) => {
             const assignmentInfo = req.body;
             const result = await assignmentCollection.insertOne(assignmentInfo);
+            res.send(result);
+        })
+        app.patch('/assignments/:id', verifyToken, async (req, res) => {
+            const id = req.params.id;
+            const data = req.body;
+            const filter = { _id: new ObjectId(id) }
+            const updatedDoc = {
+                $set: {
+                    submissionCount: data.submissionCount
+                }
+            }
+            const result = await assignmentCollection.updateOne(filter, updatedDoc)
+            res.send(result);
+        })
+
+        // feedback related api
+        app.get('/feedbacks', async (req, res) => {
+            const result = await feedbackCollection.find().toArray();
+            res.send(result);
+        })
+        app.post('/feedbacks', verifyToken, async (req, res) => {
+            const data = req.body;
+            const result = await feedbackCollection.insertOne(data);
             res.send(result);
         })
 
