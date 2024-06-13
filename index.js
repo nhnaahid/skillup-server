@@ -97,7 +97,13 @@ async function run() {
 
         // user related api
         app.get('/users', verifyToken, verifyAdmin, async (req, res) => {
-            const result = await userCollection.find().toArray();
+            const filter = req.query;
+            // console.log(filter);
+            const query = {
+                name: { $regex: filter.search, $options: 'i' }
+            };
+            const cursor = userCollection.find(query);
+            const result = await cursor.toArray();
             res.send(result);
         });
         // change korchi... verifyAdmin bad dichi
@@ -276,6 +282,24 @@ async function run() {
             // console.log(result);
             res.send(result);
         })
+        app.get('/enrolls/aggregate', async (req, res) => {
+            const courseIds = await enrollCollection.aggregate([
+                {
+                    $group: {
+                        _id: "$courseId",
+                        courseTitle: { $first: "$courseTitle" },
+                        courseImage: { $first: "$courseImage" },
+                        teacherName: { $first: "$teacherName" },
+                        coursePrice: { $first: "$coursePrice" },
+                        enrollmentCount: { $sum: 1 },
+                    }
+                },
+                {
+                    $sort: { enrollmentCount: -1 }
+                }
+            ]).toArray();
+            res.send(courseIds);
+        })
         app.get('/enrolls/student/:email', verifyToken, async (req, res) => {
             const email = req.params.email;
             const query = { studentEmail: email };
@@ -318,12 +342,17 @@ async function run() {
             const result = await feedbackCollection.find().toArray();
             res.send(result);
         })
+        app.get('/feedbacks/course/:id', verifyToken, verifyAdmin, async (req, res) => {
+            const id = req.params.id;
+            const query = { courseId: id };
+            const result = await feedbackCollection.find(query).toArray();
+            res.send(result);
+        })
         app.post('/feedbacks', verifyToken, async (req, res) => {
             const data = req.body;
             const result = await feedbackCollection.insertOne(data);
             res.send(result);
         })
-
 
 
         // payment intent
