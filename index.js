@@ -98,7 +98,7 @@ async function run() {
         // user related api
         app.get('/users', verifyToken, verifyAdmin, async (req, res) => {
             const filter = req.query;
-            // console.log(filter);
+            console.log(filter);
             const query = {
                 name: { $regex: filter.search, $options: 'i' }
             };
